@@ -1,0 +1,46 @@
+#file: Makefile
+
+PYTHON_INC= -I /usr/include/python2.6
+
+INCLUDE   = ${LOCAL_INCLUDE}  ${PYTHON_INC}
+LIB       = ${LOCAL_LIB} 
+
+CFLAG     = ${LOCAL_CFLAG} 
+SWIGFLAG  = ${LOCAL_SWIGFLAG} 
+
+
+SWIG      = swig
+CC        = gcc
+CXX       = g++
+
+BUILD_DYNAMIC_LIB_C= ${CC} ${CFLAG} -fPIC -shared -o $@ $^ ${LIB}
+BUILD_DYNAMIC_LIB_CXX= ${CXX} ${CFLAG} -fPIC -shared -o $@ $^ ${LIB}
+BUILD_BINARY_C= ${CC} ${CFLAG} -o$@ $^ ${LIB}
+BUILD_BINARY_CXX = ${CXX} ${CFLAG} -o$@ $^ ${LIB}
+
+#########################################################
+all: ${ALL}
+
+%_wrap.c : %.i
+	${SWIG} ${SWIGFLAG} -python  $^ 
+
+%_wrap.cxx : %.i
+	${SWIG} ${SWIGFLAG}  -c++ -python  $^ 
+
+%.c.o: %.c
+	${CC} ${CFLAG} -o$@ -c $^ ${INCLUDE}
+
+%.cpp.o: %.cpp
+	${CXX} ${CFLAG} -o$@  -c $^ ${INCLUDE}
+
+%.cxx.o: %.cxx
+	${CXX} ${CFLAG} -o$@  -c $^ ${INCLUDE}
+
+_%.so: %_wrap.c.o %.c.o
+	${BUILD_DYNAMIC_LIB_C}
+
+_%.so: %_wrap.cxx.o %.cpp.o
+	${BUILD_DYNAMIC_LIB_CXX}
+
+clean:
+	rm -f *.o ${ALL} *_wrap.c *_wrap.cxx *.pyc
